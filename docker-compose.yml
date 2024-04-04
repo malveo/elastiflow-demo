@@ -1,0 +1,99 @@
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    restart: unless-stopped
+    hostname: es_master1
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 131072
+        hard: 131072
+      nproc: 8192
+      fsize: -1
+    volumes:
+      - "./data/elasticsearch:/usr/share/elasticsearch/data"
+    environment:
+      ES_JAVA_OPTS: "-Xms2g -Xmx2g"
+      cluster.name: elastiflow
+      node.name: es_master1
+      bootstrap.memory_lock: "true"
+      network.bind_host: 0.0.0.0
+      http.port: 9200
+      http.publish_port: 9200
+      transport.port: 9300
+      transport.publish_port: 9300
+      cluster.initial_master_nodes: "es_master1"
+      indices.query.bool.max_clause_count: 8192
+      search.max_buckets: 250000
+      action.destructive_requires_name: "true"
+      xpack.security.enabled: "false"
+    ports:
+      - "9200:9200/tcp"
+      - "9300:9300/tcp"
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.13.0
+    restart: unless-stopped
+    hostname: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      TELEMETRY_OPTIN: "false"
+      TELEMETRY_ENABLED: "false"
+      SERVER_NAME: "kibana"
+      SERVER_HOST: "0.0.0.0"
+      SERVER_PORT: 5601
+      SERVER_MAXPAYLOADBYTES: 8388608
+      ELASTICSEARCH_HOSTS: "http://elasticsearch:9200"
+      ELASTICSEARCH_REQUESTTIMEOUT: 132000
+      ELASTICSEARCH_SHARDTIMEOUT: 120000
+      ELASTICSEARCH_SSL_VERIFICATIONMODE: "none"
+      KIBANA_AUTOCOMPLETETIMEOUT: 3000
+      KIBANA_AUTOCOMPLETETERMINATEAFTER: 2500000
+      VIS_TYPE_VEGA_ENABLEEXTERNALURLS: "true"
+      XPACK_MAPS_SHOWMAPVISUALIZATIONTYPES: "true"
+      XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY: "ElastiFlow_FFDF02FD_8B90_4D11_A65E_934F0C740C46"
+  flow-collector:
+    image: elastiflow/flow-collector-debug:6.4.3
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flow-collector
+    restart: "unless-stopped"
+    links:
+      - elasticsearch
+      - kibana
+    ports:
+      - "9995:9995/udp"
+      - "8080:8080/tcp"
+    volumes:
+      - "./config/etc/elastiflow:/etc/elastiflow"
+    environment:
+      EF_LICENSE_ACCEPTED: "true"
+      EF_ACCOUNT_ID: ${EF_ACCOUNT_ID}
+      EF_FLOW_LICENSE_KEY: ${EF_FLOW_LICENSE_KEY}
+      EF_FLOW_LICENSED_UNITS: 2
+      EF_FLOW_SERVER_UDP_IP: "0.0.0.0"
+      EF_FLOW_SERVER_UDP_PORT: 9995
+      EF_OUTPUT_ELASTICSEARCH_ENABLE: "true"
+      EF_OUTPUT_ELASTICSEARCH_ECS_ENABLE: "true"
+      EF_OUTPUT_ELASTICSEARCH_ADDRESSES: "elasticsearch:9200"
+      EF_OUTPUT_ELASTICSEARCH_TIMESTAMP_SOURCE: "start"
+      EF_OUTPUT_ELASTICSEARCH_INDEX_PERIOD: "rollover"
+      EF_LOGGER_LEVEL: ${EF_LOGGER_LEVEL}
+      EF_LOGGER_FILE_LOG_ENABLE: "true"
+      EF_LOGGER_FILE_LOG_FILENAME: "/var/log/elastiflow/flowcoll/flowcoll.log"
+      EF_PROCESSOR_DECODE_IPFIX_ENABLE: "true"
+      EF_PROCESSOR_DECODE_NETFLOW1_ENABLE: "true"
+      EF_PROCESSOR_DECODE_NETFLOW5_ENABLE: "true"
+      EF_PROCESSOR_DECODE_NETFLOW6_ENABLE: "true"
+      EF_PROCESSOR_DECODE_NETFLOW7_ENABLE: "true"
+      EF_PROCESSOR_DECODE_NETFLOW9_ENABLE: "true"
+      EF_PROCESSOR_DECODE_SFLOW5_ENABLE: "true"
+      EF_PROCESSOR_DECODE_SFLOW_FLOWS_ENABLE: "true"
+
+networks:
+  default:
+    external: true
+    name: netflow-stack
