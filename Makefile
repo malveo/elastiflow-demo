@@ -17,8 +17,14 @@ down: ## docker compose down
 ps:  ## docker compose ps
 	docker compose -f docker-compose.yml ps
 
+logs: ## docker compose logs
+	docker compose -f docker-compose.yml logs -f
+
 create-network: ## create network
 	docker network create netflow-stack
+
+import-dashboards: ## import dashboards
+	curl -X POST "http://localhost:5601/api/saved_objects/_import" -H "kbn-xsrf: true" --form file="@dashboards/kibana-8.2.x-flow-ecs.ndjson"
 
 generate-fake-nflow-traffic: ## generate nflow
 	docker run --network netflow-stack -it --rm networkstatic/nflow-generator -t flow-collector -p 9995

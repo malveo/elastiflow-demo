@@ -76,14 +76,20 @@ services:
       EF_FLOW_LICENSED_UNITS: 2
       EF_FLOW_SERVER_UDP_IP: "0.0.0.0"
       EF_FLOW_SERVER_UDP_PORT: 9995
+
+      # loggers
+      EF_LOGGER_LEVEL: ${EF_LOGGER_LEVEL}
+      EF_LOGGER_FILE_LOG_ENABLE: ${EF_LOGGER_FILE_LOG_ENABLE}
+      EF_LOGGER_FILE_LOG_FILENAME: "/var/log/elastiflow/flowcoll/flowcoll.log"
+
+      # elasticsearch output
       EF_OUTPUT_ELASTICSEARCH_ENABLE: "true"
       EF_OUTPUT_ELASTICSEARCH_ECS_ENABLE: "true"
       EF_OUTPUT_ELASTICSEARCH_ADDRESSES: "elasticsearch:9200"
       EF_OUTPUT_ELASTICSEARCH_TIMESTAMP_SOURCE: "start"
       EF_OUTPUT_ELASTICSEARCH_INDEX_PERIOD: "rollover"
-      EF_LOGGER_LEVEL: ${EF_LOGGER_LEVEL}
-      EF_LOGGER_FILE_LOG_ENABLE: "true"
-      EF_LOGGER_FILE_LOG_FILENAME: "/var/log/elastiflow/flowcoll/flowcoll.log"
+
+      # processors
       EF_PROCESSOR_DECODE_IPFIX_ENABLE: "true"
       EF_PROCESSOR_DECODE_NETFLOW1_ENABLE: "true"
       EF_PROCESSOR_DECODE_NETFLOW5_ENABLE: "true"
@@ -92,6 +98,18 @@ services:
       EF_PROCESSOR_DECODE_NETFLOW9_ENABLE: "true"
       EF_PROCESSOR_DECODE_SFLOW5_ENABLE: "true"
       EF_PROCESSOR_DECODE_SFLOW_FLOWS_ENABLE: "true"
+
+      # monitor
+      EF_OUTPUT_MONITOR_ENABLE: ${EF_OUTPUT_MONITOR_ENABLE}
+      EF_OUTPUT_MONITOR_INTERVAL: 60
+
+      # geo enrichment
+      EF_PROCESSOR_ENRICH_IPADDR_MAXMIND_GEOIP_ENABLE: 'true'
+      EF_PROCESSOR_ENRICH_IPADDR_MAXMIND_GEOIP_PATH: '/etc/elastiflow/GeoLite2-City.mmdb'
+      EF_PROCESSOR_ENRICH_IPADDR_MAXMIND_GEOIP_VALUES: 'city,country,country_code,location,timezone'
+      EF_PROCESSOR_ENRICH_IPADDR_MAXMIND_GEOIP_LANG: 'en'
+      # EF_PROCESSOR_ENRICH_IPADDR_MAXMIND_GEOIP_INCLEXCL_PATH: '/etc/elastiflow/maxmind/incl_excl.yml'
+      # EF_PROCESSOR_ENRICH_IPADDR_MAXMIND_GEOIP_INCLEXCL_REFRESH_RATE: 15
 
 networks:
   default:
